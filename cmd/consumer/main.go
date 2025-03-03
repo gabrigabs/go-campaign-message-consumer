@@ -21,7 +21,10 @@ func main() {
 		log.Error("Failed to connect to PostgreSQL", map[string]any{"error": err.Error()})
 	}
 
-	postgres.DB.Query("SELECT * FROM campaigns")
+	mongodb, err := db.NewMongoConnection(cfg.MongoDB, log)
+	if err != nil {
+		log.Error("Failed to connect to MongoDB", map[string]any{"error": err.Error()})
+	}
 
 	log.Info("Hello World", nil)
 
