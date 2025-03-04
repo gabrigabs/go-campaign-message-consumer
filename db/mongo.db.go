@@ -12,7 +12,7 @@ import (
 
 type MongoDB struct {
 	client   *mongo.Client
-	database *mongo.Database
+	Database *mongo.Database
 	logger   logger.Logger
 }
 
@@ -43,7 +43,7 @@ func NewMongoConnection(cfg config.MongoDBConfig, log logger.Logger) (*MongoDB, 
 
 	return &MongoDB{
 		client:   client,
-		database: database,
+		Database: database,
 		logger:   log,
 	}, nil
 }

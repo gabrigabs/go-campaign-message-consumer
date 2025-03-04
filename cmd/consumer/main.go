@@ -4,6 +4,7 @@ import (
 	"github.com/gabrigabs/campaign-message-consumer/config"
 	"github.com/gabrigabs/campaign-message-consumer/db"
 	"github.com/gabrigabs/campaign-message-consumer/logger"
+	"github.com/gabrigabs/campaign-message-consumer/repositories"
 )
 
 func main() {
@@ -25,6 +26,9 @@ func main() {
 	if err != nil {
 		log.Error("Failed to connect to MongoDB", map[string]any{"error": err.Error()})
 	}
+
+	campaignRepo := repository.NewCampaignRepository(postgres.DB, log)
+	messageRepo := repository.NewMessageRepository(mongodb.Database, log)
 
 	log.Info("Hello World", nil)
 
