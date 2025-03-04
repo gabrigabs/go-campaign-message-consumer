@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/gabrigabs/campaign-message-consumer/config"
 	"github.com/gabrigabs/campaign-message-consumer/db"
+	"github.com/gabrigabs/campaign-message-consumer/internal/repositories"
 	"github.com/gabrigabs/campaign-message-consumer/logger"
-	"github.com/gabrigabs/campaign-message-consumer/repositories"
 )
 
 func main() {

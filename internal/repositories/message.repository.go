@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/gabrigabs/campaign-message-consumer/internal/models"
 	"github.com/gabrigabs/campaign-message-consumer/logger"
-	"github.com/gabrigabs/campaign-message-consumer/models"
 	"github.com/nrednav/cuid2"
 	"go.mongodb.org/mongo-driver/mongo"
 )
