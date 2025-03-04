@@ -20,11 +20,18 @@ func NewPostgresConnection(cfg config.PostgresConfig, log logger.Logger) (*Postg
 		"port":     cfg.Port,
 		"database": cfg.Database,
 		"user":     cfg.User,
+		"ssl":      cfg.SslMode,
 	})
 
+	sslMode := "disable"
+
+	if cfg.SslMode {
+		sslMode = "require"
+	}
+
 	connStr := fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s",
-		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Database,
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Database, sslMode,
 	)
 
 	db, err := sql.Open("postgres", connStr)

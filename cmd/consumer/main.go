@@ -1,8 +1,13 @@
 package main
 
 import (
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/gabrigabs/campaign-message-consumer/config"
 	"github.com/gabrigabs/campaign-message-consumer/db"
+	"github.com/gabrigabs/campaign-message-consumer/internal/consumers"
 	"github.com/gabrigabs/campaign-message-consumer/internal/repositories"
 	"github.com/gabrigabs/campaign-message-consumer/logger"
 )
@@ -30,6 +35,29 @@ func main() {
 	campaignRepo := repository.NewCampaignRepository(postgres.DB, log)
 	messageRepo := repository.NewMessageRepository(mongodb.Database, log)
 
-	log.Info("Hello World", nil)
+	rabbitConsumer, err := consumer.NewRabbitMQConsumer(
+		cfg.RabbitMQ.URL,
+		cfg.RabbitMQ.Queue,
+		messageRepo,
+		campaignRepo,
+		log,
+	)
+
+	if err != nil {
+		log.Error("Failed to create RabbitMQ consumer", map[string]any{"error": err.Error()})
+	}
+
+	rabbitConsumer.Start()
+
+	log.Info("Campaign message consumer is running.", nil)
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	// Block until a signal is received
+	sig := <-sigs
+	log.Info("Received shutdown signal", map[string]interface{}{"signal": sig.String()})
+
+	// Create a context with timeout for graceful shutdown
 
 }

@@ -30,6 +30,7 @@ type PostgresConfig struct {
 	Database string
 	User     string
 	Password string
+	SslMode  bool
 }
 
 type AppConfig struct {
@@ -55,6 +56,7 @@ func LoadConfig() (*Config, error) {
 			Database: getEnv("POSTGRES_DB", "campaigns"),
 			User:     getEnv("POSTGRES_USER", "postgres"),
 			Password: getEnv("POSTGRES_PASSWORD", "postgres"),
+			SslMode:  getEnvAsBool("POSTGRES_SSL", false),
 		},
 		App: AppConfig{
 			LogLevel: getEnv("LOG_LEVEL", "info"),

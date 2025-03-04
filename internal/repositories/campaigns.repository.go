@@ -30,7 +30,7 @@ func (repository *PostgresRepository) UpdateCampaignStatus(ctx context.Context, 
 	})
 
 	query := `
-		UPDATE campaigns
+		UPDATE "Campaign"
 		SET status = $1, updated_at = NOW()
 		WHERE id = $2
 	`
