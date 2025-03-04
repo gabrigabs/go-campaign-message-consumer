@@ -7,8 +7,8 @@ import (
 
 	"github.com/gabrigabs/campaign-message-consumer/config"
 	"github.com/gabrigabs/campaign-message-consumer/db"
-	"github.com/gabrigabs/campaign-message-consumer/internal/consumers"
-	"github.com/gabrigabs/campaign-message-consumer/internal/repositories"
+	consumer "github.com/gabrigabs/campaign-message-consumer/internal/consumers"
+	repository "github.com/gabrigabs/campaign-message-consumer/internal/repositories"
 	"github.com/gabrigabs/campaign-message-consumer/logger"
 )
 
@@ -54,10 +54,7 @@ func main() {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-	// Block until a signal is received
 	sig := <-sigs
 	log.Info("Received shutdown signal", map[string]interface{}{"signal": sig.String()})
-
-	// Create a context with timeout for graceful shutdown
 
 }
