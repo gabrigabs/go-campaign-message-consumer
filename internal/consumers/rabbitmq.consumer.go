@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/gabrigabs/campaign-message-consumer/internal/models"
-	"github.com/gabrigabs/campaign-message-consumer/internal/repositories"
+	repository "github.com/gabrigabs/campaign-message-consumer/internal/repositories"
 	"github.com/gabrigabs/campaign-message-consumer/logger"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -129,7 +129,6 @@ func (consumer *RabbitMQConsumer) Start() error {
 				return
 			}
 
-			consumer.afterMessageProcessing()
 		}
 
 	}()
@@ -146,8 +145,15 @@ func (consumer *RabbitMQConsumer) processMessage(msg amqp.Delivery) {
 		"deliveryTag": msg.DeliveryTag,
 	})
 
-	var message models.Message
-	err := json.Unmarshal(msg.Body, &message)
+	var rabbitMessage struct {
+		PhoneNumber   string `json:"phone_number"`
+		Message       string `json:"message"`
+		CampaignID    string `json:"campaign_id"`
+		CompanyID     string `json:"company_id"`
+		IsLastMessage bool   `json:"is_last_message"`
+	}
+
+	err := json.Unmarshal(msg.Body, &rabbitMessage)
 	if err != nil {
 		consumer.logger.Error("Failed to parse message", map[string]any{
 			"error": err.Error(),
@@ -157,14 +163,22 @@ func (consumer *RabbitMQConsumer) processMessage(msg amqp.Delivery) {
 		return
 	}
 
-	if message.CampaignID == "" || message.PhoneNumber == "" || message.Message == "" || message.CompanyID == "" {
+	if rabbitMessage.CampaignID == "" || rabbitMessage.PhoneNumber == "" ||
+		rabbitMessage.Message == "" || rabbitMessage.CompanyID == "" {
 		consumer.logger.Error("Invalid message format", map[string]any{
-			"campaignId":  message.CampaignID,
-			"phoneNumber": message.PhoneNumber,
-			"companyId":   message.CompanyID,
+			"campaignId":  rabbitMessage.CampaignID,
+			"phoneNumber": rabbitMessage.PhoneNumber,
+			"companyId":   rabbitMessage.CompanyID,
 		})
 		msg.Reject(false)
 		return
+	}
+
+	message := models.Message{
+		PhoneNumber: rabbitMessage.PhoneNumber,
+		Message:     rabbitMessage.Message,
+		CampaignID:  rabbitMessage.CampaignID,
+		CompanyID:   rabbitMessage.CompanyID,
 	}
 
 	err = consumer.messageRepository.SaveMessage(ctx, message)
@@ -176,14 +190,17 @@ func (consumer *RabbitMQConsumer) processMessage(msg amqp.Delivery) {
 		return
 	}
 
-	err = consumer.campaignRepository.UpdateCampaignStatus(ctx, message.CampaignID)
-	if err != nil {
-		consumer.logger.Error("Failed to update campaign status to SENT", map[string]any{
-			"error":      err.Error(),
-			"campaignId": message.CampaignID,
-		})
-		msg.Ack(false)
-		return
+	if rabbitMessage.IsLastMessage {
+
+		err = consumer.campaignRepository.UpdateCampaignStatus(ctx, message.CampaignID)
+		if err != nil {
+			consumer.logger.Error("Failed to update campaign status to SENT", map[string]any{
+				"error":      err.Error(),
+				"campaignId": message.CampaignID,
+			})
+			msg.Ack(false)
+			return
+		}
 	}
 
 	consumer.logger.Info("Message processed successfully", map[string]any{
@@ -193,21 +210,4 @@ func (consumer *RabbitMQConsumer) processMessage(msg amqp.Delivery) {
 	})
 
 	msg.Ack(false)
-}
-
-func (consumer *RabbitMQConsumer) afterMessageProcessing() {
-	var message models.Message
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-
-	err := consumer.campaignRepository.UpdateCampaignStatus(ctx, message.CampaignID)
-	if err != nil {
-		consumer.logger.Error("Failed to update campaign status to SENT", map[string]any{
-			"error":      err.Error(),
-			"campaignId": message.CampaignID,
-		})
-	}
-
-	defer cancel()
-
 }
