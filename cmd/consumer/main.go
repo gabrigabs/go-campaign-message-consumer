@@ -55,6 +55,6 @@ func main() {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 	sig := <-sigs
-	log.Info("Received shutdown signal", map[string]interface{}{"signal": sig.String()})
+	log.Info("Received shutdown signal", map[string]any{"signal": sig.String()})
 
 }
